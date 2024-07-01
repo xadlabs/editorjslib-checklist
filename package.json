@@ -1,5 +1,5 @@
 {
-  "name": "@xadlabs/editorjs-checklist",
+  "name": "zmeditorjs-checklist",
   "version": "1.6.0",
   "keywords": [
     "codex editor",
@@ -9,7 +9,7 @@
   ],
   "description": "Checklist Tool for Editor.js",
   "license": "MIT",
-  "repository": "https://github.com/editor-js/checklist",
+  "repository": "https://github.com/xadlabs/editorjslib-checklist",
   "files": [
     "dist"
   ],
