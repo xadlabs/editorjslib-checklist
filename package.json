@@ -1,5 +1,5 @@
 {
-  "name": "@editorjs/checklist",
+  "name": "editorjslib-checklist",
   "version": "1.6.0",
   "keywords": [
     "codex editor",
@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build --watch",
     "build": "vite build"
   },
   "author": {

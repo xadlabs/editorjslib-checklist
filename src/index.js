@@ -88,6 +88,7 @@ export default class Checklist {
             {
               text: string,
               checked: false,
+              level: 0,
             },
           ],
         };
@@ -138,6 +139,7 @@ export default class Checklist {
         {
           text: '',
           checked: false,
+          level: 0
         },
       ];
     }
@@ -159,11 +161,14 @@ export default class Checklist {
      * Add event-listeners
      */
     this._elements.wrapper.addEventListener('keydown', (event) => {
-      const [ENTER, BACKSPACE] = [13, 8]; // key codes
+      const [ENTER, BACKSPACE, TAB] = [13, 8, 9]; // key codes
 
       switch (event.keyCode) {
         case ENTER:
           this.enterPressed(event);
+          break;
+        case TAB:
+          event.shiftKey ? this.shiftTab(event) : this.tab(event);
           break;
         case BACKSPACE:
           this.backspace(event);
@@ -193,6 +198,7 @@ export default class Checklist {
       return {
         text: getHTML(input),
         checked: itemEl.classList.contains(this.CSS.itemChecked),
+        level: this.getLevel(itemEl)
       };
     });
 
@@ -260,6 +266,8 @@ export default class Checklist {
     checkListItem.appendChild(checkboxContainer);
     checkListItem.appendChild(textField);
 
+    this.setLevel(checkListItem, item.level);
+
     return checkListItem;
   }
 
@@ -275,6 +283,19 @@ export default class Checklist {
     const currentItem = document.activeElement.closest(`.${this.CSS.item}`);
     const currentItemIndex = items.indexOf(currentItem);
     const isLastItem = currentItemIndex === items.length - 1;
+    const itemLevel = this.getLevel(currentItem);
+
+    /**
+     * If the current item level > 0 and item is empty, then reduce the level
+     */
+    if (itemLevel > 0) {
+      const currentItemText = getHTML(this.getItemInput(currentItem));
+
+      if (currentItemText.length === 0) {
+        this.setLevel(currentItem, itemLevel - 1);
+        return;
+      }
+    }
 
     /**
      * Prevent checklist item generation if it's the last item and it's empty
@@ -308,6 +329,7 @@ export default class Checklist {
     const newItem = this.createChecklistItem({
       text: htmlAfterCaret,
       checked: false,
+      level: itemLevel,
     });
 
     /**
@@ -357,6 +379,45 @@ export default class Checklist {
     moveCaret(prevItemInput, undefined, prevItemChildNodesLength);
 
     currentItem.remove();
+  }
+
+  tab(event) {
+    this.updateLevel(event, 1);
+  }
+
+  getLevel(item) {
+    return item.dataset.level ? parseInt(item.dataset.level) : 0;
+  }
+
+  setLevel(item, level) {
+    item.dataset.level = level || 0;
+    item.style.paddingLeft = this.getTabPadding(level);
+  }
+
+  /**
+   * Update level by tab event
+   * 
+   * @param {KeyboardEvent} event
+   */ 
+  updateLevel(event, delta) {
+    /**
+     * Prevent default tab behavior
+     */
+    event.stopPropagation();
+    event.preventDefault();
+
+    const item = event.target.parentElement;
+    const oldLevel = this.getLevel(item);
+    const newLevel = Math.max(0, oldLevel + delta);
+    this.setLevel(item, newLevel);
+  }
+
+  shiftTab(event) {
+    this.updateLevel(event, -1);
+  }
+
+  getTabPadding(level) {
+    return level * 2 + 'em';
   }
 
   /**
