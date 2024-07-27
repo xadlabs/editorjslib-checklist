@@ -231,6 +231,9 @@ export default class Checklist {
    */
   toggleCheckbox(event) {
     const checkListItem = event.target.closest(`.${this.CSS.item}`);
+    if (!checkListItem) {
+      return;
+    }
     const checkbox = checkListItem.querySelector(`.${this.CSS.checkboxContainer}`);
 
     if (checkbox.contains(event.target)) {
