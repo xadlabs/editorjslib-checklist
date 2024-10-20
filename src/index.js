@@ -253,10 +253,7 @@ export default class Checklist {
     const checkListItem = make('div', this.CSS.item);
     const checkbox = make('span', this.CSS.checkbox);
     const checkboxContainer = make('div', this.CSS.checkboxContainer);
-    const textField = make('div', this.CSS.textField, {
-      innerHTML: item.text ? item.text : '',
-      contentEditable: !this.readOnly,
-    });
+    const textField = this.createItemTextField(item.text || '');
 
     if (item.checked) {
       checkListItem.classList.add(this.CSS.itemChecked);
@@ -272,6 +269,82 @@ export default class Checklist {
     this.setLevel(checkListItem, item.level);
 
     return checkListItem;
+  }
+
+  createItemTextField(content) {
+    const textField = make('div', this.CSS.textField, {
+      innerHTML: content,
+      contentEditable: (!this.readOnly).toString(),
+    });
+
+    if (this.readOnly) {
+      return textField;
+    }
+
+    const dragButton = make('button', this.CSS.itemDragButton, {
+      innerHTML:
+        '<svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em"><path d="M776.832 385.834667L512 121.002667 247.168 385.834667l60.330667 60.330666L512 241.664l204.501333 204.501333 60.330667-60.330666zM247.168 638.165333L512 902.997333l264.832-264.832-60.330667-60.330666L512 782.336l-204.501333-204.501333-60.330667 60.330666z" p-id="5140"></path></svg>',
+    });
+    const wrapper = make('div', this.CSS.itemDragWrapper, {});
+    wrapper.appendChild(textField);
+    wrapper.appendChild(dragButton);
+
+    wrapper.addEventListener('click', (ev) => {
+      if (ev.target === ev.currentTarget) {
+        ev.stopPropagation();
+        moveCaret(textField, false);
+      }
+    });
+
+    wrapper.addEventListener('dragstart', () => {
+      this.dragSource = wrapper;
+    });
+
+    wrapper.addEventListener('dragover', (ev) => {
+      if (this.dragTarget) {
+        this.dragTarget.classList.remove('drag-target');
+      }
+      this.dragTarget = wrapper;
+      this.dragTarget.classList.add('drag-target');
+    });
+
+    wrapper.addEventListener('drop', (ev) => {
+      ev.preventDefault();
+    });
+
+    wrapper.addEventListener('dragend', () => {
+      if (this.dragSource && this.dragTarget) {
+        // Swap checked status
+        const sourceItem = this.dragSource.closest(`.${this.CSS.item}`);
+        const targetItem = this.dragTarget.closest(`.${this.CSS.item}`);
+        const sourceChecked = sourceItem.classList.contains(this.CSS.itemChecked);
+        const targetChecked = targetItem.classList.contains(this.CSS.itemChecked);
+        if (sourceChecked !== targetChecked) {
+          sourceItem.classList.toggle(this.CSS.itemChecked);
+          targetItem.classList.toggle(this.CSS.itemChecked);
+        }
+        // Swap content
+        const sourceContent = this.dragSource.querySelector(
+          `.${this.CSS.textField}`
+        );
+        const targetContent = this.dragTarget.querySelector(
+          `.${this.CSS.textField}`
+        );
+        const tempContent = targetContent.innerHTML;
+        targetContent.innerHTML = sourceContent.innerHTML;
+        sourceContent.innerHTML = tempContent;
+        moveCaret(targetContent, false);
+      }
+      if (this.dragTarget) {
+        this.dragTarget.classList.remove('drag-target');
+      }
+      this.dragSource = null;
+      this.dragTarget = null;
+    });
+
+    wrapper.draggable = true;
+
+    return wrapper;
   }
 
   /**
@@ -409,7 +482,7 @@ export default class Checklist {
     event.stopPropagation();
     event.preventDefault();
 
-    const item = event.target.parentElement;
+    const item = event.target.closest(`.${this.CSS.item}`);
     const oldLevel = this.getLevel(item);
     const newLevel = Math.max(0, oldLevel + delta);
     this.setLevel(item, newLevel);
@@ -438,7 +511,9 @@ export default class Checklist {
       noHover: 'cdx-checklist__item-checkbox--no-hover',
       checkbox: 'cdx-checklist__item-checkbox-check',
       textField: 'cdx-checklist__item-text',
-      checkboxContainer: 'cdx-checklist__item-checkbox'
+      checkboxContainer: 'cdx-checklist__item-checkbox',
+      itemDragButton: 'cdx-checklist__item-drag-button',
+      itemDragWrapper: 'cdx-checklist__item-drag-wrapper',
     };
   }
 

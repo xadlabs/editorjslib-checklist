@@ -17,6 +17,32 @@
         box-sizing: content-box;
         align-items: flex-start;
 
+        &-drag-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+      
+            &.drag-target {
+                background: #3c91fb2e;
+            }
+        }
+    
+        &-drag-button {
+            margin-left: 1em;
+            background: #e8e8e8;
+            border-radius: 4px;
+            padding: 0.2em;
+            opacity: 0;
+        }
+    
+        &-drag-wrapper:hover &-drag-button {
+            opacity: 1;
+        }
+
+        &-drag-wrapper &-text {
+            flex-grow: 0;
+        }
+
         &-text {
             outline: none;
             flex-grow: 1;
